@@ -1,5 +1,6 @@
 // Devin DeWitt
-// Code combining the ZeroServer and bitBang codes
+// C++ code to sample an analog-to-digital converter and send the data over TCP socket to Java application
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
@@ -18,19 +19,21 @@
 #define    MISO   2  // Physical pin 13
 #define SCLK   1  // Physical pin 12
 #define CS    10 // Physical pin 24
+
 using namespace std;
+
 void cmdLnCheck(int argc, char* argv[]);
 void sendMessage(int clientSocket, string data);
 int recvMessage(int clientSocket);
 void changeFunction(int clientSocket, int& currentChannel, int& currentFilter);
-//int changeChannel(int clientSocket, int currentChannel);
-//int changeFilter(int clientSocket, int currentFilter);
 int spiRW(int channel);
+
 static const int START = 1;
 static const int RECVLENGTH = 4;
 static const int SINGLE = 1;
 static const int CHANNELBIT = 6;
 static const int FILTERBIT = 7;
+
 int main(int argc, char *argv[])
 {
     struct sockaddr_in serverIP, clientIP;
@@ -46,22 +49,20 @@ int main(int argc, char *argv[])
     pinMode(CS, OUTPUT);
     digitalWrite(CS, HIGH);
     digitalWrite(SCLK, HIGH);
-    //    if(argc < 2){
-    //    cmdLnCheck(argc, argv);
-    // }
-    //portNum = atoi(argv[1]);
-    // Creating server socket
+    
     cout << "Creating socket...";
     if((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0){
         cerr << "Couldn't create socket...Exiting Program...";
         return errno;
     }
+    
     cout << "Socket Created" << endl;
     if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
                   &opt, sizeof(opt))){
         cerr << "setsockopt error...Exiting program...";
         return errno;
     }
+    
     serverIP.sin_family = AF_INET;
     serverIP.sin_port = htons(0);
     serverIP.sin_addr.s_addr = INADDR_ANY;
@@ -77,12 +78,13 @@ int main(int argc, char *argv[])
     int myPort = ntohs(serverIP.sin_port);
     printf("Local port: %u\n", myPort);
     cout << "Socket Bound" << endl;
+    
     // Setting socket to listen for client
     if(listen(serverSocket, 2)){
         cerr << "Error listening for connection. Exiting program.";
         return 0;
     }
-    //cout << "Waiting for client on port: " << portNum << endl;
+    
     clientSocket = accept(serverSocket, (struct sockaddr*)&clientIP,
                           (socklen_t*)&addrLen);
     cout << "Client Connected" << endl;
@@ -103,6 +105,7 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
+
 void cmdLnCheck(int argc, char* argv[])
 {
     if(argc < 2){
@@ -110,39 +113,28 @@ void cmdLnCheck(int argc, char* argv[])
         cin >> *argv[1];
     }
 }
+
 void sendMessage(int clientSocket, string data)
 {
     char buffer[17] = {0};
     int sendSize = 0, messageSize = 17;
     // Creating a buffer that stores size of the message, followed by the message
-    //for(int i = 0; i < 16; i++){
-    // sprintf(buffer, "%s%d", buffer, data[i]);
-    //}
-    //sprintf(buffer, "%s\n", buffer);
     strncpy(buffer, data.c_str(), 16);
     buffer[16] = '\n';
     // Sending data to client
     while(sendSize < messageSize){
         sendSize += send(clientSocket, buffer, messageSize, 0);
     }
-
     return;
 }
+
 int recvMessage(int clientSocket)
 {
-    //int channel = 0;
-    //char intBuffer[4];
-    //int recvSize = 0;
-    //int bytesRead = 0;
     long incomingNum = 0;
-//    while(bytesRead < RECVLENGTH) {
-//        recvSize = recv(clientSocket, intBuffer + bytesRead, sizeof(intBuffer) - bytesRead, 0);
-//        bytesRead += recvSize;
-//        cout << recvSize << endl;
-//    }
     recv(clientSocket, &incomingNum, sizeof(incomingNum), MSG_DONTWAIT);
     return incomingNum;
 }
+
 void changeFunction(int clientSocket, int& currentChannel, int& currentFilter)
 {
     int newFunction = 0;
