@@ -1,3 +1,9 @@
+// Devin DeWitt
+// Client Android Applictaion designed to send and receive data over TCP socket 
+// NOTE: Client expects to connect to Raspberry Pi running C++ code
+//       If connecting to another language/processor expected message 
+//       termination character and endianness may be different and could lead to errors
+
 package e.devin.ecgclient;
 
 import android.support.v7.app.AppCompatActivity;
@@ -11,7 +17,6 @@ import android.widget.Button;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.Viewport;
 import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.LineGraphSeries;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 
 import java.io.BufferedReader;
@@ -195,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
                     if(changeChannel || changeFilter){
                         this.clientOut = Integer.parseInt(channelInput.getText().toString());
                         this.buff = ByteBuffer.allocate(4);
-                        //this.b = buff.order(ByteOrder.BIG_ENDIAN).putInt(clientOut).array();
                         if(changeChannel){
                             clientOut = clientOut | (1 << CHANNELBIT);
                             changeChannel = false;
